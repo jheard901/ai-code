@@ -13,6 +13,7 @@ private:
 	int currRow;
 	int currCol;
 	std::vector<std::vector<int>> board;
+	//int** iSpace;
 
 	//four temp boards for generating moves
 	List* boardList;
@@ -20,9 +21,11 @@ public:
 	Puzzle();
 	static Puzzle &Inst() { static Puzzle puzSolved; return puzSolved; }
 	static Puzzle &Self() { static Puzzle puzSelf; return puzSelf; }
+	static int* &Space() { static int* iSpace; return iSpace; }
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
+	void Shutdown();
 	void Display();
 	void Clone();
 	void CloneSelf();

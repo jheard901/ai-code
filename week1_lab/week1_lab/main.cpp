@@ -20,7 +20,7 @@ int main()
 	PuzGame.Init(3, 3);
 	PuzGame.Clone();	//creates a copy of solution
 	PuzGame.Display();
-	NEW_LINE(LEN);
+	//NEW_LINE(LEN);
 	PuzGame.GenMoves();
 
 	if (PuzGame.Solved())

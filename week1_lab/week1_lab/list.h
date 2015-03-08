@@ -5,7 +5,7 @@ class Puzzle;	//forward declaration
 
 class List
 {
-private:
+public:
 	typedef struct Node {
 		Puzzle* nPuz;
 		Node* next = nullptr;
@@ -17,12 +17,13 @@ private:
 	Node* tail;		//the end of list
 
 	int nLength;		//the length of the list
-public:
+//public:
 	List();
 	static List &Inst() { static List puzList; return puzList; }
 	~List();
 
 	void Insert(Puzzle* Puz);
-	void Reset();		//deletes all items in list
-	void Display();		//outputs values of list
+	void Reset();				//deletes all items in list
+	void Display();				//outputs values of list
+	void GoTo(int element);		//points ptr to n element of the list
 };

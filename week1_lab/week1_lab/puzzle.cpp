@@ -11,7 +11,7 @@ Puzzle::Puzzle()
 
 Puzzle::~Puzzle()
 {
-
+	Shutdown();
 }
 
 void Puzzle::Init(int X, int Y)
@@ -23,6 +23,20 @@ void Puzzle::Init(int X, int Y)
 	std::vector<int> a;
 
 	int total = (X * Y) - 1;	//use -1 so it abides by number of pieces allotted in the NxN puzzle
+
+	//create the space to keep track of it on the board; only need to know which column the space is in though
+	//iSpace = new int*[rows];
+	Puzzle::Space() = new int[columns];
+	//for (int i = 0; i < rows; i++)
+	//{
+	//	//iSpace[i] = new int[columns];
+	//	Puzzle::Space()[i] = new int[columns];
+	//}
+
+	//the location with a value of 1 is considered the empty space
+	Puzzle::Space()[columns - 1] = 1;
+	//iSpace[rows][columns] = 1;
+	//Puzzle::Space()[rows][columns] = 1;
 
 	//init board
 	if (board.empty())
@@ -49,6 +63,19 @@ void Puzzle::Init(int X, int Y)
 	{
 		board.clear();
 	}
+}
+
+void Puzzle::Shutdown()
+{
+	//delete dynamic array
+	//for (int i = 0; i < rows; i++)
+	//{
+	//	//delete [] iSpace[i];
+	//	delete [] Puzzle::Space()[i];
+	//}
+	
+	//delete the Space;
+	delete[] Puzzle::Space();
 }
 
 void Puzzle::Display()
@@ -78,13 +105,10 @@ void Puzzle::Display()
 			}
 		}
 		
-		//check if we should start on a new row
-		if (currCol == columns)
-		{
-			std::cout << "\n";
-			currCol = 0;
-			currRow++;
-		}
+		//start on a new row
+		std::cout << "\n";
+		currCol = 0;
+		currRow++;
 	}
 }
 
@@ -117,7 +141,7 @@ void Puzzle::CloneToBoard(std::vector<std::vector<int>> targetBoard)
 
 void Puzzle::CloneFromBoard(std::vector<std::vector<int>> srcBoard)
 {
-	//assure board is empty first
+	//ensure board is empty first
 	if (!board.empty())
 	{
 		board.clear();
@@ -156,7 +180,34 @@ void Puzzle::GenMoves()
 	{
 		boardList->Insert(&Puzzle::Self());
 	}
-	
+	//boardList->Display();	//debug test
+	//std::vector<int> a;
+	//a.push_back(0);
+	//boardList->head->nPuz->board.push_back(a);
+
+	currRow = 0;
+	currCol = 0;
+
+	//check each row to see which one has a space (or rather, has N - 1 columns in a single row)
+	//rows
+	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
+	{
+		//cols
+		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
+		{
+			currCol++;
+		}
+
+		if (currCol != columns)
+		{
+			//this row is deemed as the one with the space
+			//the question now is, how do we determine where our space is placed at in the row?
+		}
+		else
+		{
+			currRow++;
+		}
+	}
 }
 
 std::vector<std::vector<int>> Puzzle::GetBoard()

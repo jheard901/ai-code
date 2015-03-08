@@ -92,12 +92,31 @@ void List::Display()
 	{
 		ptr->nPuz->Display();
 		ptr = ptr->next;
-
+		std::cout << "\n";
 		//output this immediately since tail->next is NULL
 		if (ptr == tail)
 		{
 			ptr->nPuz->Display();
 		}
+	}
+}
+
+//use numbers 0-3 for choosing an element
+void List::GoTo(int element)
+{
+	//start from head
+	ptr = head;
+
+	if (!element > nLength)
+	{
+		for (int n = 0; n < element; n++)
+		{
+			ptr = ptr->next;
+		}
+	}
+	else
+	{
+		std::cout << "\nerror - element position is larger than list";
 	}
 }
 
