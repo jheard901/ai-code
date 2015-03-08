@@ -15,8 +15,6 @@ private:
 	std::vector<std::vector<int>> board;
 	int** iSpace;
 	int emptyRow, emptyCol;
-	//int* iColSpace;
-	//int iRowSpace;
 
 	//four temp boards for generating moves
 	List* boardList;
@@ -29,7 +27,6 @@ public:
 	Puzzle();
 	static Puzzle &Inst() { static Puzzle puzSolved; return puzSolved; }
 	static Puzzle &Self() { static Puzzle puzSelf; return puzSelf; }
-	//static int* &Space() { static int* iSpace; return iSpace; }
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
@@ -39,8 +36,16 @@ public:
 	void CloneSelf();
 	void CloneToBoard(std::vector<std::vector<int>> targetBoard);
 	void CloneFromBoard(std::vector<std::vector<int>> srcBoard);
+	void CloneFromPuzzle(Puzzle* srcPuzzle);
 	bool Solved();	//checks if the puzzle is solved
 	void GenMoves();
-	std::vector<std::vector<int>> GetBoard();
+	bool IsValid(int row, int rowIncrement, int col, int colIncrement); //removed first param (int** &arg, )
 	void GetSpace();
+
+	//inline defs
+	std::vector<std::vector<int>> GetBoard() { return board; }
+	int GetRows() { return rows; }
+	int GetCols() { return columns; }
+	int GetEmptyRow() { return emptyRow; }
+	int GetEmptyCol() { return emptyCol; }
 };

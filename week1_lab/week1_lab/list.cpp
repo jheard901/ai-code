@@ -18,7 +18,7 @@ void List::Insert(Puzzle* Puz)
 	{
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
-		temp->nPuz->CloneFromBoard(Puz->GetBoard());
+		temp->nPuz->CloneFromPuzzle(Puz);
 
 		head = temp;
 		tail = temp;
@@ -30,7 +30,7 @@ void List::Insert(Puzzle* Puz)
 	{
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
-		temp->nPuz->CloneFromBoard(Puz->GetBoard());
+		temp->nPuz->CloneFromPuzzle(Puz);
 
 		head->next = temp;
 		temp->prev = head;
@@ -43,7 +43,7 @@ void List::Insert(Puzzle* Puz)
 	{
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
-		temp->nPuz->CloneFromBoard(Puz->GetBoard());
+		temp->nPuz->CloneFromPuzzle(Puz);
 
 		temp->prev = tail;
 		tail->next = temp;
@@ -107,7 +107,7 @@ void List::GoTo(int element)
 	//start from head
 	ptr = head;
 
-	if (!element > nLength)
+	if (element > -1 && element < nLength)
 	{
 		for (int n = 0; n < element; n++)
 		{

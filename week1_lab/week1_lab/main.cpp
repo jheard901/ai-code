@@ -19,9 +19,11 @@ int main()
 	Puzzle PuzGame;
 	PuzGame.Init(3, 3);
 	PuzGame.Clone();	//creates a copy of solution
-	PuzGame.Display();
-	//NEW_LINE(LEN);
+	//PuzGame.Display();
 	PuzGame.GenMoves();
+	NEW_LINE(LEN);
+	PuzGame.Display();
+	
 
 	if (PuzGame.Solved())
 	{
