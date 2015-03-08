@@ -13,15 +13,23 @@ private:
 	int currRow;
 	int currCol;
 	std::vector<std::vector<int>> board;
-	//int** iSpace;
+	int** iSpace;
+	int emptyRow, emptyCol;
+	//int* iColSpace;
+	//int iRowSpace;
 
 	//four temp boards for generating moves
 	List* boardList;
+
+	bool bMoveUp;
+	bool bMoveDown;
+	bool bMoveLeft;
+	bool bMoveRight;
 public:
 	Puzzle();
 	static Puzzle &Inst() { static Puzzle puzSolved; return puzSolved; }
 	static Puzzle &Self() { static Puzzle puzSelf; return puzSelf; }
-	static int* &Space() { static int* iSpace; return iSpace; }
+	//static int* &Space() { static int* iSpace; return iSpace; }
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
@@ -34,4 +42,5 @@ public:
 	bool Solved();	//checks if the puzzle is solved
 	void GenMoves();
 	std::vector<std::vector<int>> GetBoard();
+	void GetSpace();
 };
