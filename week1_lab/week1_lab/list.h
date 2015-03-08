@@ -25,5 +25,6 @@ public:
 	void Insert(Puzzle* Puz);
 	void Reset();				//deletes all items in list
 	void Display();				//outputs values of list
+	void Display(int nItem);	//outputs a specific value from list
 	void GoTo(int element);		//points ptr to n element of the list
 };

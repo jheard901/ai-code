@@ -19,6 +19,8 @@ void List::Insert(Puzzle* Puz)
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
 		temp->nPuz->CloneFromPuzzle(Puz);
+		temp->nPuz->InitSpace(temp->nPuz->GetRows(), temp->nPuz->GetCols());
+		temp->nPuz->UpdateSpace(temp->nPuz->GetEmptyRow(), temp->nPuz->GetEmptyCol());
 
 		head = temp;
 		tail = temp;
@@ -31,6 +33,8 @@ void List::Insert(Puzzle* Puz)
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
 		temp->nPuz->CloneFromPuzzle(Puz);
+		temp->nPuz->InitSpace(temp->nPuz->GetRows(), temp->nPuz->GetCols());
+		temp->nPuz->UpdateSpace(temp->nPuz->GetEmptyRow(), temp->nPuz->GetEmptyCol());
 
 		head->next = temp;
 		temp->prev = head;
@@ -44,6 +48,8 @@ void List::Insert(Puzzle* Puz)
 		Node* temp = new Node;
 		temp->nPuz = new Puzzle;
 		temp->nPuz->CloneFromPuzzle(Puz);
+		temp->nPuz->InitSpace(temp->nPuz->GetRows(), temp->nPuz->GetCols());
+		temp->nPuz->UpdateSpace(temp->nPuz->GetEmptyRow(), temp->nPuz->GetEmptyCol());
 
 		temp->prev = tail;
 		tail->next = temp;
@@ -99,6 +105,14 @@ void List::Display()
 			ptr->nPuz->Display();
 		}
 	}
+}
+
+//use numbers 0-3 for choosing an item
+void List::Display(int nItem)
+{
+	std::cout << "\n";
+	GoTo(nItem);
+	ptr->nPuz->Display();
 }
 
 //use numbers 0-3 for choosing an element

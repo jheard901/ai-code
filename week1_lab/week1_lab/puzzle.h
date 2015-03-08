@@ -30,9 +30,10 @@ public:
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
+	void InitSpace(int r, int c);
 	void Shutdown();
 	void Display();
-	void Clone();
+	void CloneSolution();
 	void CloneSelf();
 	void CloneToBoard(std::vector<std::vector<int>> targetBoard);
 	void CloneFromBoard(std::vector<std::vector<int>> srcBoard);
@@ -41,6 +42,7 @@ public:
 	void GenMoves();
 	bool IsValid(int row, int rowIncrement, int col, int colIncrement); //removed first param (int** &arg, )
 	void GetSpace();
+	void UpdateSpace(int newRow, int newCol);
 
 	//inline defs
 	std::vector<std::vector<int>> GetBoard() { return board; }
@@ -48,4 +50,8 @@ public:
 	int GetCols() { return columns; }
 	int GetEmptyRow() { return emptyRow; }
 	int GetEmptyCol() { return emptyCol; }
+
+	//desperation
+	//int currRow;
+	//int currCol;
 };

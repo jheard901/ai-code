@@ -25,21 +25,8 @@ void Puzzle::Init(int X, int Y)
 	int total = (X * Y) - 1;	//use -1 so it abides by number of pieces allotted in the NxN puzzle
 	
 	//init the array; the location with a value of 1 is considered the empty space (i.e. last row, last col)
-	iSpace = new int*[rows];
-	for (int i = 0; i < rows; i++)
-	{
-		iSpace[i] = new int[columns];
-	}
-
-	//fill in the 2d array
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < columns; j++)
-		{
-			iSpace[i][j] = 0;
-		}
-	}
-	iSpace[rows - 1][columns - 1] = 1;
+	InitSpace(rows, columns);
+	Puzzle::Self().InitSpace(rows, columns);
 
 	//init board
 	if (board.empty())
@@ -66,6 +53,26 @@ void Puzzle::Init(int X, int Y)
 	{
 		board.clear();
 	}
+}
+
+void Puzzle::InitSpace(int r, int c)
+{
+	//init the array; the location with a value of 1 is considered the empty space (i.e. last row, last col)
+	iSpace = new int*[r];
+	for (int i = 0; i < r; i++)
+	{
+		iSpace[i] = new int[c];
+	}
+
+	//fill in the 2d array
+	for (int i = 0; i < r; i++)
+	{
+		for (int j = 0; j < c; j++)
+		{
+			iSpace[i][j] = 0;
+		}
+	}
+	iSpace[r - 1][c - 1] = 1;
 }
 
 void Puzzle::Shutdown()
@@ -123,7 +130,7 @@ void Puzzle::Display()
 	}
 }
 
-void Puzzle::Clone()
+void Puzzle::CloneSolution()
 {
 	for (unsigned int i = 0; i < board.size(); i++)
 	{
@@ -140,10 +147,19 @@ void Puzzle::CloneSelf()
 		Puzzle::Self().board.clear();
 	}
 
+	Puzzle::Self().rows = rows;
+	Puzzle::Self().columns = columns;
+
 	for (unsigned int i = 0; i < board.size(); i++)
 	{
 		Puzzle::Self().board.push_back(board[i]);
 	}
+
+	//gets the empty row and col
+	//Puzzle::Self().InitSpace(rows, columns);	//put this into Init() instead
+	Puzzle::Self().GetSpace();
+	Puzzle::Self().emptyRow = emptyRow;
+	Puzzle::Self().emptyCol = emptyCol;
 }
 
 void Puzzle::CloneToBoard(std::vector<std::vector<int>> targetBoard)
@@ -211,14 +227,16 @@ void Puzzle::GenMoves()
 	//boardList->head->nPuz->board.push_back(a);
 
 
-	GetSpace();	//gets the empty row and col
+	GetSpace();	//gets the empty row and col	///ignore this -> //moved this functionality into CloneSelf() <- NO! 
 	currRow = 0;
 	currCol = 0;
 	int tempNum;
 
-	//check up
+	//check up *** using board 0
 	if (IsValid(emptyRow, -1, emptyCol, 0))
 	{
+		bMoveUp = true;
+
 		if (iSpace[emptyRow - 1][emptyCol] == 0)
 		{
 			//choose the first board from the list
@@ -229,15 +247,26 @@ void Puzzle::GenMoves()
 			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
 			boardList->ptr->nPuz->board[emptyRow - 1].erase(boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol);
 
+			//update it's space location
+			boardList->ptr->nPuz->UpdateSpace(emptyRow - 1, emptyCol);
+			boardList->ptr->nPuz->GetSpace();
+
 			//present the new possible board state
 			//tempNum = *board[emptyRow - 1].begin() + emptyCol;					//get the value of the location above
 			//board[emptyRow].insert(board[emptyRow].begin() + emptyCol, tempNum);	//add that value to the empty space
 			//board[emptyRow - 1].erase(board[emptyRow - 1].begin() + emptyCol);	//now erase that value from the original location
 		}
 	}
-	//check down
+	else
+	{
+		bMoveUp = false;
+	}
+
+	//check down *** using board 1
 	if (IsValid(emptyRow, 1, emptyCol, 0))
 	{
+		bMoveDown = true;
+
 		if (iSpace[emptyRow + 1][emptyCol] == 0)
 		{
 			//choose the second board from the list
@@ -247,11 +276,22 @@ void Puzzle::GenMoves()
 			tempNum = *boardList->ptr->nPuz->board[emptyRow + 1].begin() + emptyCol;
 			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
 			boardList->ptr->nPuz->board[emptyRow + 1].erase(boardList->ptr->nPuz->board[emptyRow + 1].begin() + emptyCol);
+
+			//update it's space location
+			boardList->ptr->nPuz->UpdateSpace(emptyRow + 1, emptyCol);
+			boardList->ptr->nPuz->GetSpace();
 		}
 	}
-	//check left
+	else
+	{
+		bMoveDown = false;
+	}
+
+	//check left *** using board 2
 	if (IsValid(emptyRow, 0, emptyCol, -1))
 	{
+		bMoveLeft = true;
+
 		if (iSpace[emptyRow][emptyCol - 1] == 0)
 		{
 			//choose the third board from the list
@@ -261,12 +301,22 @@ void Puzzle::GenMoves()
 			tempNum = *boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol - 1);
 			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
 			boardList->ptr->nPuz->board[emptyRow].erase(boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol - 1));
+
+			//update it's space location
+			boardList->ptr->nPuz->UpdateSpace(emptyRow, emptyCol - 1);
+			boardList->ptr->nPuz->GetSpace();
 		}
 	}
-	
-	//check right
+	else
+	{
+		bMoveLeft = false;
+	}
+
+	//check right *** using board 3
 	if (IsValid(emptyRow, 0, emptyCol, 1))
 	{
+		bMoveRight = true;
+
 		if (iSpace[emptyRow][emptyCol + 1] == 0)
 		{
 			//choose the fourth board from the list
@@ -276,19 +326,29 @@ void Puzzle::GenMoves()
 			tempNum = *boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol + 1);
 			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
 			boardList->ptr->nPuz->board[emptyRow].erase(boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol + 1));
+
+			//update it's space location
+			boardList->ptr->nPuz->UpdateSpace(emptyRow, emptyCol + 1);
+			boardList->ptr->nPuz->GetSpace();
 		}
 	}
+	else
+	{
+		bMoveRight = false;
+	}
 	
-	//display moves to user
-	boardList->Display();
+	//display all moves to user
+	//boardList->Display();
+
+	//display valid moves to user
+	if (bMoveUp)	{ boardList->Display(0); }
+	if (bMoveDown)	{ boardList->Display(1); }
+	if (bMoveLeft)	{ boardList->Display(2); }
+	if (bMoveRight)	{ boardList->Display(3); }
 }
 
 bool Puzzle::IsValid(int row, int rowIncrement, int col, int colIncrement)
 {
-	//int sr = sizeof(arg[row]);					//should be equal to row size of NxN size
-	//int sc = sizeof(arg);						//should be equal to col size of NxN size
-	//int sri = sizeof(arg[row]) + rowIncrement;	//proposed new position of the space in row
-	//int sci = sizeof(arg) + colIncrement;		//proposed new position of the space in col
 
 	int mr = rows - 1;				//max number of rows
 	int mc = columns - 1;			//max number of cols
@@ -330,10 +390,10 @@ void Puzzle::GetSpace()
 
 	//check each row to see which one has a space (or rather, has N - 1 columns in a single row)
 	//rows
-	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
+	for (unsigned int i = 0; i < board.size(); i++)	//changed to use just board, took out Puzzle::Inst() from board.size(); hope there were no dependencies on this
 	{
 		//cols
-		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
+		for (unsigned int j = 0; j < board[i].size(); j++)
 		{
 			currCol++;
 		}
@@ -349,6 +409,7 @@ void Puzzle::GetSpace()
 				{
 					//this col is the one with the space
 					emptyCol = z;
+					return;
 				}
 			}
 		}
@@ -358,5 +419,20 @@ void Puzzle::GetSpace()
 			currRow++;
 		}
 	}
+}
+
+void Puzzle::UpdateSpace(int newRow, int newCol)
+{
+	//make all values 0
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			iSpace[i][j] = 0;
+		}
+	}
+
+	//set new location of space
+	iSpace[newRow][newCol] = 1;
 }
 
