@@ -14,21 +14,40 @@ const int LEN = 2;
 
 int main()
 {
-	srand(unsigned(time(NULL))); //seed random number generator once
+	//seed random number generator once
+	srand(unsigned(time(NULL))); 
 
+	///////////////////////////////////////////
+	//Start test driver here
+	///////////////////////////////////////////
+	int rowSize, colSize, shufTimes;
 	Puzzle PuzGame;
-	PuzGame.Init(3, 3);
-	PuzGame.CloneSolution();	//creates a copy of solution
-	//PuzGame.Display();
-	PuzGame.GenMoves();
-	NEW_LINE(LEN);
-	PuzGame.Display();
-	
 
-	if (PuzGame.Solved())
+	//uncomment this after debugging
+	std::cout << "row size: ";
+	std::cin >> rowSize;
+	std::cout << "col size: ";
+	std::cin >> colSize;
+	std::cout << "shuffle times: ";
+	std::cin >> shufTimes;
+	PuzGame.GenGame(rowSize, colSize, shufTimes);
+
+	//PuzGame.GenGame(4, 4, 20);
+	//PuzGame.Init(3, 3);
+	//PuzGame.CloneSolution();	//creates a copy of solution
+	//PuzGame.GenMoves();
+	//PuzGame.DisplayGenMoves();
+	NEW_LINE(LEN);
+	//PuzGame.Display();
+
+	while (!PuzGame.Solved())
 	{
-		std::cout << "\n\nYou win!";
+		PuzGame.GetUserInput();
 	}
+	
+	std::cout << "\n\nYou win!";
+	NEW_LINE(LEN);
+	PuzGame.DisplayStats();
 	NEW_LINE(LEN);
 	system("pause");
 

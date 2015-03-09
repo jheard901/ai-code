@@ -27,4 +27,5 @@ public:
 	void Display();				//outputs values of list
 	void Display(int nItem);	//outputs a specific value from list
 	void GoTo(int element);		//points ptr to n element of the list
+	int Length();				//returns length of list
 };

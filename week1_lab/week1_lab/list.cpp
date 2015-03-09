@@ -90,7 +90,7 @@ void List::Display()
 	//start from head, then output each node's Data value until making it to the end
 	ptr = head;
 
-	std::cout << "Data Values:\n";
+	std::cout << "\n";	//removed displaying a title "Data Values:"
 
 	if (ptr == nullptr) { return; }		//prevents access violation error
 
@@ -132,5 +132,10 @@ void List::GoTo(int element)
 	{
 		std::cout << "\nerror - element position is larger than list";
 	}
+}
+
+int List::Length()
+{
+	return nLength;
 }
 

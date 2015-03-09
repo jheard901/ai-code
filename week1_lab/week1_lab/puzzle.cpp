@@ -24,9 +24,16 @@ void Puzzle::Init(int X, int Y)
 
 	int total = (X * Y) - 1;	//use -1 so it abides by number of pieces allotted in the NxN puzzle
 	
+	//init the container for board states (or technically Puzzles)
+	boardList = new List;
+
+	//init the container for storing previous board states
+	prevBoardList = new List;
+
 	//init the array; the location with a value of 1 is considered the empty space (i.e. last row, last col)
 	InitSpace(rows, columns);
 	Puzzle::Self().InitSpace(rows, columns);
+	//Puzzle::Prev().InitSpace(rows, columns);
 
 	//init board
 	if (board.empty())
@@ -85,7 +92,7 @@ void Puzzle::Shutdown()
 	delete[] iSpace;
 }
 
-//GenMoves needs to be ran first before calling display so the location of the space is known
+//GenMoves needs to be ran first before calling display so the location of the space is known; or rather GetSpace()
 void Puzzle::Display()
 {
 	currRow = 0;
@@ -138,7 +145,7 @@ void Puzzle::CloneSolution()
 	}
 }
 
-//maybe this should be a bool instead?
+//copies most of this object's values into the Puzzle::Self() static object
 void Puzzle::CloneSelf()
 {
 	//ensure board is empty first
@@ -212,22 +219,22 @@ bool Puzzle::Solved()
 	return true;
 }
 
+//this seems like it may be the source of the problem for numbers not displaying properly; I probably need to change the code where I present new board states
 void Puzzle::GenMoves()
 {
-	boardList = new List;
+	//updating the space is done in CloneSelf() as well
 	CloneSelf();
+
+	//make sure the board list is clear
+	boardList->Reset();
 
 	for (int i = 0; i < 4; i++)	//use 4 since that is the max number of moves
 	{
 		boardList->Insert(&Puzzle::Self());
 	}
-	//boardList->Display();	//debug test
-	//std::vector<int> a;
-	//a.push_back(0);
-	//boardList->head->nPuz->board.push_back(a);
 
 
-	GetSpace();	//gets the empty row and col	///ignore this -> //moved this functionality into CloneSelf() <- NO! 
+	GetSpace();	//gets the empty row and col
 	currRow = 0;
 	currCol = 0;
 	int tempNum;
@@ -243,9 +250,9 @@ void Puzzle::GenMoves()
 			boardList->GoTo(0);
 
 			//present the new possible board state
-			tempNum = *boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol;
-			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
-			boardList->ptr->nPuz->board[emptyRow - 1].erase(boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol);
+			tempNum = *boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol;											//get the value of the location above
+			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);	//add that value to the empty space
+			boardList->ptr->nPuz->board[emptyRow - 1].erase(boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol);		//now erase that value from the original location
 
 			//update it's space location
 			boardList->ptr->nPuz->UpdateSpace(emptyRow - 1, emptyCol);
@@ -336,15 +343,18 @@ void Puzzle::GenMoves()
 	{
 		bMoveRight = false;
 	}
-	
-	//display all moves to user
-	//boardList->Display();
 
 	//display valid moves to user
-	if (bMoveUp)	{ boardList->Display(0); }
-	if (bMoveDown)	{ boardList->Display(1); }
-	if (bMoveLeft)	{ boardList->Display(2); }
-	if (bMoveRight)	{ boardList->Display(3); }
+	//DisplayGenMoves();	<- optional to keep here I guess
+}
+
+//only call this after running GenMoves()
+void Puzzle::DisplayGenMoves()
+{
+	if (bMoveUp)	{ std::cout << "\nState: 0\n"; boardList->Display(0); }
+	if (bMoveDown)	{ std::cout << "\nState: 1\n"; boardList->Display(1); }
+	if (bMoveLeft)	{ std::cout << "\nState: 2\n"; boardList->Display(2); }
+	if (bMoveRight)	{ std::cout << "\nState: 3\n"; boardList->Display(3); }
 }
 
 bool Puzzle::IsValid(int row, int rowIncrement, int col, int colIncrement)
@@ -434,5 +444,257 @@ void Puzzle::UpdateSpace(int newRow, int newCol)
 
 	//set new location of space
 	iSpace[newRow][newCol] = 1;
+}
+
+//generates NxN puzzle and shuffles it
+void Puzzle::GenGame(int nRows, int nCols, int nShuffles)
+{
+	Init(nRows, nCols);
+	CloneSolution();	//creates a copy of solution
+	std::cout << "\nAssemble Like This:\n";
+	GetSpace();	//caution for errors
+	Display();
+
+	//int nShuffles = 20;
+	for (int i = 0; i < nShuffles; i++)
+	{
+		GenMoves();
+		//prevBoardList->Insert(&Puzzle::Self());	//store our old state down
+		//DisplayGenMoves();
+		RandNewState();
+	}
+	std::cout << "\n\nCurrent Board State:\n";
+	Display();
+	//std::cout << "\n\n\nPrevious Board States:\n";
+	//prevBoardList->Display();
+}
+
+void Puzzle::GetUserInput()
+{
+	int userPick;
+
+	GenMoves();
+	prevBoardList->Insert(&Puzzle::Self());	//store our old state down
+	DisplayGenMoves();
+	std::cout << "\nPick new state: ";
+	std::cin >> userPick;
+	while (!PickNewState(userPick))
+	{
+		std::cout << "\nerror - invalid state entered";
+		std::cout << "\nPick new state: ";
+		std::cin >> userPick;
+	}
+	std::cout << "\n\nCurrent Board State:\n";
+	Display();
+}
+
+//randomly selects a board state from boardlist; must run GenMoves before this
+void Puzzle::RandNewState()
+{
+	//later, I should probably add a condition to check if the boardlist is empty
+	int randNum;
+	bool bValidMove = false;
+	int sameValue;
+	int maxSameValue = board.size();
+
+	while (!bValidMove)
+	{
+		randNum = GetRandomInt(0, 3);	//must be from range 0 - 3 to choose a valid board state
+		sameValue = 0;					//reset sameValue
+
+		if (randNum == 0)
+		{
+			//can move up?
+			if (bMoveUp)
+			{
+				//count shared values by first board and old board state
+				boardList->GoTo(0);
+				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
+				{
+					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
+					{
+						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						{
+							sameValue++;
+						}
+					}
+				}
+
+				//is not same as last board state? //this method needs to be done better later on
+				if (sameValue != maxSameValue)
+				{
+					bValidMove = true;
+				}
+			}
+		}
+		else if (randNum == 1)
+		{
+			//can move down?
+			if (bMoveDown)
+			{
+				//count shared values by second board and old board state
+				boardList->GoTo(1);
+				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
+				{
+					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
+					{
+						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						{
+							sameValue++;
+						}
+					}
+				}
+
+				//is not same as last board state? //this method needs to be done better later on
+				if (sameValue != maxSameValue)
+				{
+					bValidMove = true;
+				}
+			}
+		}
+		else if (randNum == 2)
+		{
+			//can move left?
+			if (bMoveLeft)
+			{
+				//count shared values by third board and old board state
+				boardList->GoTo(2);
+				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
+				{
+					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
+					{
+						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						{
+							sameValue++;
+						}
+					}
+				}
+
+				//is not same as last board state? //this method needs to be done better later on
+				if (sameValue != maxSameValue)
+				{
+					bValidMove = true;
+				}
+			}
+		}
+		else if (randNum == 3)
+		{
+			//can move right?
+			if (bMoveRight)
+			{
+				//count shared values by fourth board and old board state
+				boardList->GoTo(3);
+				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
+				{
+					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
+					{
+						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						{
+							sameValue++;
+						}
+					}
+				}
+
+				//is not same as last board state? //this method needs to be done better later on
+				if (sameValue != maxSameValue)
+				{
+					bValidMove = true;
+				}
+			}
+		}
+		else
+		{
+			//this else statement should never happen though
+		}
+	}
+	
+	//set our current board to the new board's state
+	//also, these functions are essentially all you need whenever you want to update the current board to a new board state
+	CloneFromPuzzle(boardList->ptr->nPuz);
+	UpdateSpace(emptyRow, emptyCol);
+	GetSpace();
+}
+
+//must be between 0 - 3 as per max num of board states
+bool Puzzle::PickNewState(int nState)
+{
+	//later, I should probably add a condition to check if the boardlist is empty
+	int userNum = nState;
+	bool bValidMove = false;
+	int sameValue;
+	int maxSameValue = board.size();
+
+	while (!bValidMove)
+	{
+		sameValue = 0;	//reset sameValue
+
+		if (userNum == 0)
+		{
+			//can move up?
+			if (bMoveUp)
+			{
+				bValidMove = true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if (userNum == 1)
+		{
+			//can move down?
+			if (bMoveDown)
+			{
+				bValidMove = true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if (userNum == 2)
+		{
+			//can move left?
+			if (bMoveLeft)
+			{
+				bValidMove = true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if (userNum == 3)
+		{
+			//can move right?
+			if (bMoveRight)
+			{
+				bValidMove = true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			//this else statement should never happen though
+		}
+	}
+
+	//set our current board to the new board's state
+	//also, these functions are essentially all you need whenever you want to update the current board to a new board state
+	CloneFromPuzzle(boardList->ptr->nPuz);
+	UpdateSpace(emptyRow, emptyCol);
+	GetSpace();
+	return true;
+}
+
+void Puzzle::DisplayStats()
+{
+	std::cout << "\nBoard State History:";
+	prevBoardList->Display();
+	std::cout << "\nMoves Taken: " << prevBoardList->Length();
+	
 }
 
