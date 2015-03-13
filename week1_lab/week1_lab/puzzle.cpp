@@ -101,9 +101,6 @@ void Puzzle::Display()
 	int num;
 	std::vector<int>::iterator i;
 
-	//CloneSelf();
-	//GetSpace();
-
 	for (unsigned int x = 0; x < board.size(); x++)
 	{
 		for (unsigned int y = 0; y < board[currRow].size(); y++)
@@ -163,7 +160,6 @@ void Puzzle::CloneSelf()
 	}
 
 	//gets the empty row and col
-	//Puzzle::Self().InitSpace(rows, columns);	//put this into Init() instead
 	Puzzle::Self().GetSpace();
 	Puzzle::Self().emptyRow = emptyRow;
 	Puzzle::Self().emptyCol = emptyCol;
@@ -257,11 +253,6 @@ void Puzzle::GenMoves()
 			//update it's space location
 			boardList->ptr->nPuz->UpdateSpace(emptyRow - 1, emptyCol);
 			boardList->ptr->nPuz->GetSpace();
-
-			//present the new possible board state
-			//tempNum = *board[emptyRow - 1].begin() + emptyCol;					//get the value of the location above
-			//board[emptyRow].insert(board[emptyRow].begin() + emptyCol, tempNum);	//add that value to the empty space
-			//board[emptyRow - 1].erase(board[emptyRow - 1].begin() + emptyCol);	//now erase that value from the original location
 		}
 	}
 	else
@@ -344,8 +335,6 @@ void Puzzle::GenMoves()
 		bMoveRight = false;
 	}
 
-	//display valid moves to user
-	//DisplayGenMoves();	<- optional to keep here I guess
 }
 
 //only call this after running GenMoves()
@@ -400,7 +389,7 @@ void Puzzle::GetSpace()
 
 	//check each row to see which one has a space (or rather, has N - 1 columns in a single row)
 	//rows
-	for (unsigned int i = 0; i < board.size(); i++)	//changed to use just board, took out Puzzle::Inst() from board.size(); hope there were no dependencies on this
+	for (unsigned int i = 0; i < board.size(); i++)
 	{
 		//cols
 		for (unsigned int j = 0; j < board[i].size(); j++)

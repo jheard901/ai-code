@@ -33,13 +33,7 @@ int main()
 	PuzGame.GenGame(rowSize, colSize, shufTimes);
 
 	//PuzGame.GenGame(4, 4, 20);
-	//PuzGame.Init(3, 3);
-	//PuzGame.CloneSolution();	//creates a copy of solution
-	//PuzGame.GenMoves();
-	//PuzGame.DisplayGenMoves();
 	NEW_LINE(LEN);
-	//PuzGame.Display();
-
 	while (!PuzGame.Solved())
 	{
 		PuzGame.GetUserInput();
