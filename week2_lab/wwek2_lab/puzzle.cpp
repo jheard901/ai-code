@@ -22,74 +22,49 @@ void Puzzle::Init(int X, int Y)
 	currCol = 0;
 	std::vector<int> a;
 
-	int total = (X * Y) - 1;	//use -1 so it abides by number of pieces allotted in the NxN puzzle
+	total = (X * Y);	//total number of pieces on board. 0 = the empty space.
 
 	//init the container for board states (or technically Puzzles)
 	boardList = new List;
-
+	
 	//init the container for storing previous board states
 	prevBoardList = new List;
 
-	//init the array; the location with a value of 1 is considered the empty space (i.e. last row, last col)
-	InitSpace(rows, columns);
-	Puzzle::Self().InitSpace(rows, columns);
-	//Puzzle::Prev().InitSpace(rows, columns);
-
 	//init board
-	if (board.empty())
-	{
-		for (int x = 0; x < total; x++)
-		{
-			a.push_back(x + 1);		//use +1 so we start from 1 instead of 0
-			currCol++;
-
-			//check if we should start on a new row
-			if (currCol == columns)
-			{
-				board.push_back(a);
-				a.clear();
-				currCol = 0;
-				currRow++;
-			}
-		}
-		//push back the final row into the board; needed since we will always exit early on the last row which is will be 1 short of being the same length as a completed row
-		board.push_back(a);
-		a.clear();
-	}
-	else
+	if (!board.empty())
 	{
 		board.clear();
 	}
-}
 
-void Puzzle::InitSpace(int r, int c)
-{
-	//init the array; the location with a value of 1 is considered the empty space (i.e. last row, last col)
-	iSpace = new int*[r];
-	for (int i = 0; i < r; i++)
+	//fill in board
+	for (int x = 0; x < total; x++)
 	{
-		iSpace[i] = new int[c];
-	}
-
-	//fill in the 2d array
-	for (int i = 0; i < r; i++)
-	{
-		for (int j = 0; j < c; j++)
+		//make the last number inserted = to 0
+		if (x == total - 1)
 		{
-			iSpace[i][j] = 0;
+			a.push_back(0);
+			currCol++;
+		}
+		else
+		{
+			a.push_back(x + 1);		//use +1 so we start from 1 instead of 0
+			currCol++;
+		}
+		
+		//check if we should start on a new row
+		if (currCol == columns)
+		{
+			board.push_back(a);
+			a.clear();
+			currCol = 0;
+			currRow++;
 		}
 	}
-	iSpace[r - 1][c - 1] = 1;
 }
 
 void Puzzle::Shutdown()
 {
-	//delete the dynamic array
-	for (int i = 0; i < rows; i++)
-	{
-		delete[] iSpace[i];
-	}
-	delete[] iSpace;
+	
 }
 
 //GenMoves needs to be ran first before calling display so the location of the space is known; or rather GetSpace()
@@ -99,32 +74,32 @@ void Puzzle::Display()
 	currCol = 0;
 	const int LIMIT = 10;
 	int num;
-	std::vector<int>::iterator i;
 
 	for (unsigned int x = 0; x < board.size(); x++)
 	{
 		for (unsigned int y = 0; y < board[currRow].size(); y++)
 		{
-			//check if empty space should be printed
-			if (emptyRow == currRow && emptyCol == currCol)
-			{
-				std::cout << "  " << "  ";
-			}
-
 			//this is purely for visual appearance to make single digit numbers, line up with double digit numbers
-			i = board[currRow].begin() + y;
-			num = *i;
+			num = board[currRow].at(y);
 			if (num < LIMIT)
 			{
-				std::cout << "0" << *board[currRow].begin() + y << "  ";
-				currCol++;
+				//is the num our empty space?
+				if (num == 0)
+				{
+					std::cout << "  " << "  ";
+					currCol++;
+				}
+				else
+				{
+					std::cout << "0" << board[currRow].at(y) << "  ";
+					currCol++;
+				}
 			}
 			else
 			{
-				std::cout << *board[currRow].begin() + y << "  ";
+				std::cout << board[currRow].at(y) << "  ";
 				currCol++;
 			}
-
 		}
 
 		//start on a new row
@@ -199,13 +174,17 @@ void Puzzle::CloneFromPuzzle(Puzzle* srcPuzzle)
 
 bool Puzzle::Solved()
 {
+	int tempNum;
+
 	//rows
 	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
 	{
 		//cols
 		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
 		{
-			if (*board[i].begin() + j != *Puzzle::Inst().board[i].begin() + j)
+			tempNum = board[i].at(j);
+
+			if (tempNum != Puzzle::Inst().board[i].at(j))
 			{
 				return false;
 			}
@@ -229,106 +208,94 @@ void Puzzle::GenMoves()
 		boardList->Insert(&Puzzle::Self());
 	}
 
-
-	GetSpace();	//gets the empty row and col
+	GetSpace();
 	currRow = 0;
 	currCol = 0;
 	int tempNum;
 
-	//check up *** using board 0
+	//check up | using board 0
 	if (IsValid(emptyRow, -1, emptyCol, 0))
 	{
 		bMoveUp = true;
 
-		if (iSpace[emptyRow - 1][emptyCol] == 0)
-		{
-			//choose the first board from the list
-			boardList->GoTo(0);
+		//choose the first board from the list
+		boardList->GoTo(0);
 
-			//present the new possible board state
-			tempNum = *boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol;											//get the value of the location above
-			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);	//add that value to the empty space
-			boardList->ptr->nPuz->board[emptyRow - 1].erase(boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol);		//now erase that value from the original location
+		//present the new possible board state
+		//tempNum = *boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol;											//get the value of the location above
+		//boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);	//add that value to the empty space
+		//boardList->ptr->nPuz->board[emptyRow - 1].erase(boardList->ptr->nPuz->board[emptyRow - 1].begin() + emptyCol);		//now erase that value from the original location
 
-			//update it's space location
-			boardList->ptr->nPuz->UpdateSpace(emptyRow - 1, emptyCol);
-			boardList->ptr->nPuz->GetSpace();
-		}
+		//present the new possible board state
+		tempNum = boardList->ptr->nPuz->board[emptyRow - 1].at(emptyCol);	//get the value of the location above
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol) = tempNum;				//change the empty space (0) to be that value
+		boardList->ptr->nPuz->board[emptyRow - 1].at(emptyCol) = 0;					//make the location above the empty space (0)
+
+		//update it's space location
+		boardList->ptr->nPuz->GetSpace();
 	}
 	else
 	{
 		bMoveUp = false;
 	}
 
-	//check down *** using board 1
+	//check down | using board 1
 	if (IsValid(emptyRow, 1, emptyCol, 0))
 	{
 		bMoveDown = true;
 
-		if (iSpace[emptyRow + 1][emptyCol] == 0)
-		{
-			//choose the second board from the list
-			boardList->GoTo(1);
+		//choose the second board from the list
+		boardList->GoTo(1);
 
-			//present the new possible board state
-			tempNum = *boardList->ptr->nPuz->board[emptyRow + 1].begin() + emptyCol;
-			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
-			boardList->ptr->nPuz->board[emptyRow + 1].erase(boardList->ptr->nPuz->board[emptyRow + 1].begin() + emptyCol);
+		//present the new possible board state
+		tempNum = boardList->ptr->nPuz->board[emptyRow + 1].at(emptyCol);
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol) = tempNum;
+		boardList->ptr->nPuz->board[emptyRow + 1].at(emptyCol) = 0;
 
-			//update it's space location
-			boardList->ptr->nPuz->UpdateSpace(emptyRow + 1, emptyCol);
-			boardList->ptr->nPuz->GetSpace();
-		}
+		//update it's space location
+		boardList->ptr->nPuz->GetSpace();
 	}
 	else
 	{
 		bMoveDown = false;
 	}
 
-	//check left *** using board 2
+	//check left | using board 2
 	if (IsValid(emptyRow, 0, emptyCol, -1))
 	{
 		bMoveLeft = true;
 
-		if (iSpace[emptyRow][emptyCol - 1] == 0)
-		{
-			//choose the third board from the list
-			boardList->GoTo(2);
+		//choose the third board from the list
+		boardList->GoTo(2);
 
-			//present the new possible board state
-			tempNum = *boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol - 1);
-			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
-			boardList->ptr->nPuz->board[emptyRow].erase(boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol - 1));
+		//present the new possible board state
+		tempNum = boardList->ptr->nPuz->board[emptyRow].at(emptyCol - 1);
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol) = tempNum;
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol - 1) = 0;
 
-			//update it's space location
-			boardList->ptr->nPuz->UpdateSpace(emptyRow, emptyCol - 1);
-			boardList->ptr->nPuz->GetSpace();
-		}
+		//update it's space location
+		boardList->ptr->nPuz->GetSpace();
 	}
 	else
 	{
 		bMoveLeft = false;
 	}
 
-	//check right *** using board 3
+	//check right | using board 3
 	if (IsValid(emptyRow, 0, emptyCol, 1))
 	{
 		bMoveRight = true;
 
-		if (iSpace[emptyRow][emptyCol + 1] == 0)
-		{
-			//choose the fourth board from the list
-			boardList->GoTo(3);
+		//choose the fourth board from the list
+		boardList->GoTo(3);
 
-			//present the new possible board state
-			tempNum = *boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol + 1);
-			boardList->ptr->nPuz->board[emptyRow].insert(boardList->ptr->nPuz->board[emptyRow].begin() + emptyCol, tempNum);
-			boardList->ptr->nPuz->board[emptyRow].erase(boardList->ptr->nPuz->board[emptyRow].begin() + (emptyCol + 1));
+		//present the new possible board state
+		tempNum = boardList->ptr->nPuz->board[emptyRow].at(emptyCol + 1);
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol) = tempNum;
+		boardList->ptr->nPuz->board[emptyRow].at(emptyCol + 1) = 0;
 
-			//update it's space location
-			boardList->ptr->nPuz->UpdateSpace(emptyRow, emptyCol + 1);
-			boardList->ptr->nPuz->GetSpace();
-		}
+		//update it's space location
+		boardList->ptr->nPuz->GetSpace();
 	}
 	else
 	{
@@ -381,83 +348,49 @@ bool Puzzle::IsValid(int row, int rowIncrement, int col, int colIncrement)
 	return true;
 }
 
-//this is only used after calling CloneSelf() (i.e. in GenMoves() )
+//fills in emptyRow and emptyCol based off which row and col has the value 0 in it
 void Puzzle::GetSpace()
 {
 	currRow = 0;
 	currCol = 0;
+	int tempNum;
 
-	//check each row to see which one has a space (or rather, has N - 1 columns in a single row)
 	//rows
 	for (unsigned int i = 0; i < board.size(); i++)
 	{
 		//cols
 		for (unsigned int j = 0; j < board[i].size(); j++)
 		{
-			currCol++;
-		}
-
-		if (currCol != columns)
-		{
-			//this row is the one with the space
-			emptyRow = currRow;
-
-			for (int z = 0; z < sizeof(iSpace[emptyRow]); z++)
+			tempNum = board[i].at(j);
+			if (tempNum == 0)
 			{
-				if (iSpace[emptyRow][z] == 1)
-				{
-					//this col is the one with the space
-					emptyCol = z;
-					return;
-				}
+				emptyRow = currRow;
+				emptyCol = currCol;
+
+				return;
+			}
+			else
+			{
+				currCol++;
 			}
 		}
-		else
-		{
-			currCol = 0;
-			currRow++;
-		}
+		currCol = 0;
+		currRow++;
 	}
 }
 
-void Puzzle::UpdateSpace(int newRow, int newCol)
+void Puzzle::Shuffle(int nTimes)
 {
-	//make all values 0
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < columns; j++)
-		{
-			iSpace[i][j] = 0;
-		}
-	}
-
-	//set new location of space
-	iSpace[newRow][newCol] = 1;
-}
-
-//generates NxN puzzle and shuffles it
-void Puzzle::GenGame(int nRows, int nCols, int nShuffles)
-{
-	Init(nRows, nCols);
-	CloneSolution();	//creates a copy of solution
-	std::cout << "\nAssemble Like This:\n";
-	GetSpace();	//caution for errors
-	Display();
-
-	//int nShuffles = 20;
-	for (int i = 0; i < nShuffles; i++)
+	for (int i = 0; i < nTimes; i++)
 	{
 		GenMoves();
 		//prevBoardList->Insert(&Puzzle::Self());	//store our old state down
 		//DisplayGenMoves();
 		RandNewState();
 	}
-	std::cout << "\n\nCurrent Board State:\n";
-	Display();
-	//std::cout << "\n\n\nPrevious Board States:\n";
-	//prevBoardList->Display();
 }
 
+//should only be used by test driver
 void Puzzle::GetUserInput()
 {
 	int userPick;
@@ -480,11 +413,10 @@ void Puzzle::GetUserInput()
 //randomly selects a board state from boardlist; must run GenMoves before this
 void Puzzle::RandNewState()
 {
-	//later, I should probably add a condition to check if the boardlist is empty
 	int randNum;
 	bool bValidMove = false;
 	int sameValue;
-	int maxSameValue = board.size();
+	int maxSameValue = total;
 
 	while (!bValidMove)
 	{
@@ -502,7 +434,7 @@ void Puzzle::RandNewState()
 				{
 					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
 					{
-						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
 						{
 							sameValue++;
 						}
@@ -527,7 +459,7 @@ void Puzzle::RandNewState()
 				{
 					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
 					{
-						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
 						{
 							sameValue++;
 						}
@@ -552,7 +484,7 @@ void Puzzle::RandNewState()
 				{
 					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
 					{
-						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
 						{
 							sameValue++;
 						}
@@ -577,7 +509,8 @@ void Puzzle::RandNewState()
 				{
 					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
 					{
-						if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						//if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
+						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
 						{
 							sameValue++;
 						}
@@ -600,7 +533,6 @@ void Puzzle::RandNewState()
 	//set our current board to the new board's state
 	//also, these functions are essentially all you need whenever you want to update the current board to a new board state
 	CloneFromPuzzle(boardList->ptr->nPuz);
-	UpdateSpace(emptyRow, emptyCol);
 	GetSpace();
 }
 
@@ -610,12 +542,9 @@ bool Puzzle::PickNewState(int nState)
 	//later, I should probably add a condition to check if the boardlist is empty
 	int userNum = nState;
 	bool bValidMove = false;
-	int sameValue;
-	int maxSameValue = board.size();
 
 	while (!bValidMove)
 	{
-		sameValue = 0;	//reset sameValue
 
 		if (userNum == 0)
 		{
@@ -673,8 +602,8 @@ bool Puzzle::PickNewState(int nState)
 
 	//set our current board to the new board's state
 	//also, these functions are essentially all you need whenever you want to update the current board to a new board state
+	boardList->GoTo(userNum);
 	CloneFromPuzzle(boardList->ptr->nPuz);
-	UpdateSpace(emptyRow, emptyCol);
 	GetSpace();
 	return true;
 }

@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <stdlib.h> //srand(), rand()
-#include <time.h> //time()
+
 
 float	frn();
 float	GetRandomFloat(float a, float b);

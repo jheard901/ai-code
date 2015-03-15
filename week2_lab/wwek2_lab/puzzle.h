@@ -13,8 +13,8 @@ private:
 	int currRow;
 	int currCol;
 	std::vector<std::vector<int>> board;
-	int** iSpace;
 	int emptyRow, emptyCol;
+	int total;	//total num pieces in play
 
 	//four temp boards for generating moves
 	List* boardList;
@@ -33,7 +33,6 @@ public:
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
-	void InitSpace(int r, int c);
 	void Shutdown();
 	void Display();
 	void CloneSolution();
@@ -44,11 +43,9 @@ public:
 	bool Solved();	//checks if the puzzle is solved
 	void GenMoves();
 	void DisplayGenMoves();	//only call this after running GenMoves()
-	bool IsValid(int row, int rowIncrement, int col, int colIncrement); //removed first param (int** &arg, )
+	bool IsValid(int row, int rowIncrement, int col, int colIncrement);
 	void GetSpace();
-	void UpdateSpace(int newRow, int newCol);
-	//void GenGame(int nRows, int nCols, int nShuffles);	//shuffles board
-	void Shuffle(int nShuffles);
+	void Shuffle(int nTimes);	//shuffles board
 	void GetUserInput();
 	void RandNewState();	//randomly selects a board state
 	bool PickNewState(int nState);	//allows picking a board state
@@ -60,6 +57,5 @@ public:
 	int GetCols() { return columns; }
 	int GetEmptyRow() { return emptyRow; }
 	int GetEmptyCol() { return emptyCol; }
-
 };
 
