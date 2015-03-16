@@ -9,18 +9,15 @@ const int LEN = 2;
 
 TestDriver::TestDriver()
 {
-	//player settings
+	//default player settings
 	rowSize = 0;
 	colSize = 0;
 	shufTimes = 0;
 
-	//ai settings
+	//default ai settings
 	aiRowSize = 3;
 	aiColSize = 3;
 	aiShufTimes = 20;
-
-	//seed random number generator once
-	srand(unsigned(time(NULL)));
 }
 
 TestDriver::~TestDriver()
@@ -31,6 +28,9 @@ TestDriver::~TestDriver()
 //Starts up the game for a player; 0 = person playing, 1 = AI playing
 void TestDriver::InitGame(int nMode)
 {
+	//seed random number generator once
+	//srand(unsigned(time(NULL)));
+
 	if (nMode == 0)
 	{
 		playerType = PLAYER_CHARACTER;
@@ -76,13 +76,24 @@ void TestDriver::InitGame(int nMode)
 	//AI Player
 	else if (playerType == NONPLAYER_CHARACTER)
 	{
+		GenGame(2, 2, 4);
 
+		if (PuzGame.SolveAttempt(&PuzGame))
+		{
+			std::cout << "\n\nYou win!";
+			NEW_LINE(LEN);
+			PuzGame.DisplayStats();
+			NEW_LINE(LEN);
+			std::cout << "Your Board:\n";
+			PuzGame.Display();
+			return;
+		}
 	}
 
 	//For Debugging
 	else if (playerType == DEV_CHARACTER)
 	{
-		GenGame(4, 6, 2);	//input values directly
+		GenGame(3, 3, 2);	//input values directly
 
 		//The Game Loop
 		while (!PuzGame.Solved())

@@ -129,6 +129,76 @@ void List::GoTo(int element)
 	}
 }
 
+void List::DeleteLast()
+{
+	if (tail == nullptr) { return; }
+
+	if (nLength < 2)
+	{
+		delete tail;
+		head = nullptr;
+		tail = nullptr;
+		nLength--;
+	}
+	else if (nLength > 1)
+	{
+		ptr = tail->prev;
+		delete tail;
+		ptr->next = nullptr;
+		tail = ptr;
+		nLength--;
+	}
+	else { }
+}
+
+void List::DeleteLast(int nElements)
+{
+	if (tail == nullptr) { return; }
+	if (nLength < nElements) { std::cout << "\ninvalid. not enough values in list to delete\n"; return; }
+
+	for (int i = 0; i < nElements; i++)
+	{
+		if (nLength < 2)
+		{
+			delete tail;
+			head = nullptr;
+			tail = nullptr;
+			nLength--;
+		}
+		else if (nLength > 1)
+		{
+			ptr = tail->prev;
+			delete tail;
+			ptr->next = nullptr;
+			tail = ptr;
+			nLength--;
+		}
+		else {}
+	}
+}
+
+//copies all puzzles (i.e. board states) from a source list
+void List::Copy(List* srcList)
+{
+	if (srcList == NULL) { return; }
+
+	if (srcList->head != nullptr)
+	{
+		srcList->ptr = srcList->head;
+
+		while (srcList->ptr->next != nullptr)
+		{
+			Insert(srcList->ptr->nPuz);
+			srcList->ptr = srcList->ptr->next;
+		}
+		Insert(srcList->ptr->nPuz);
+	}
+	else
+	{
+		//std::cout << "\nerror. attempting to copy empty list\n";
+	}
+}
+
 int List::Length()
 {
 	return nLength;

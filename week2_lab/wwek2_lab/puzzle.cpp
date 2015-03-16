@@ -5,6 +5,8 @@
 #include <iostream>
 
 Puzzle::Puzzle()
+	:	movesTaken(0),
+		depth(0)
 {
 
 }
@@ -29,6 +31,12 @@ void Puzzle::Init(int X, int Y)
 	
 	//init the container for storing previous board states
 	prevBoardList = new List;
+
+	//init list for use with IDFS
+	validMoves = new List;
+	theSolPath = new List;
+	solutionPath = new List;
+	recursePath = new List;
 
 	//init board
 	if (!board.empty())
@@ -138,6 +146,9 @@ void Puzzle::CloneSelf()
 	Puzzle::Self().GetSpace();
 	Puzzle::Self().emptyRow = emptyRow;
 	Puzzle::Self().emptyCol = emptyCol;
+
+	//gets solution puzzle
+	//Puzzle::Self().CloneSolution();	//this might cause errors
 }
 
 void Puzzle::CloneToBoard(std::vector<std::vector<int>> targetBoard)
@@ -183,6 +194,28 @@ bool Puzzle::Solved()
 		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
 		{
 			tempNum = board[i].at(j);
+
+			if (tempNum != Puzzle::Inst().board[i].at(j))
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool Puzzle::Solved(std::vector<std::vector<int>> Board)
+{
+	int tempNum;
+
+	//rows
+	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
+	{
+		//cols
+		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
+		{
+			tempNum = Board[i].at(j);
 
 			if (tempNum != Puzzle::Inst().board[i].at(j))
 			{
@@ -408,6 +441,7 @@ void Puzzle::GetUserInput()
 	}
 	std::cout << "\n\nCurrent Board State:\n";
 	Display();
+	movesTaken++;
 }
 
 //randomly selects a board state from boardlist; must run GenMoves before this
@@ -612,7 +646,140 @@ void Puzzle::DisplayStats()
 {
 	std::cout << "\nBoard State History:";
 	prevBoardList->Display();
-	std::cout << "\nMoves Taken: " << prevBoardList->Length();
+	std::cout << "\nMoves Taken: " << movesTaken;
+}
+
+bool Puzzle::SolveAttempt(Puzzle* aPuz)
+{
+	CloneSelf();
+
+	while (!aPuz->Solved())
+	{
+		solutionPath->Reset();
+
+		theSolPath->Copy(IDFS(depth, aPuz));
+		if (theSolPath->tail != nullptr)
+		{
+			CloneFromBoard(theSolPath->tail->nPuz->board);
+		}
+		depth++;
+	}
+	return true;
+}
+
+//must be run after gen moves
+void Puzzle::StoreMoves(Puzzle* puz)
+{
+	int randNum;
+	int sum = 0;
+	std::vector<int> valid;
+
+	//clear list if not already empty
+	if (validMoves->Length() > 0)
+	{
+		validMoves->Reset();
+	}
+
+	//check the valid moves
+	if (bMoveUp) { valid.push_back(0); sum++; }
+	if (bMoveDown) { valid.push_back(1); sum++; }
+	if (bMoveLeft) { valid.push_back(2); sum++; }
+	if (bMoveRight) { valid.push_back(3); sum++; }
+	
+	
+	//can only use sum > 1 here
+	while (sum > 1)
+	{
+		randNum = GetRandomInt(0, float(sum - 1));
+		boardList->GoTo(valid.at(randNum));
+		CloneFromPuzzle(boardList->ptr->nPuz);
+		GetSpace();
+		validMoves->Insert(puz);
+
+		valid.erase(valid.begin() + randNum);
+		sum--;
+	}
+	//then input the final move
+	if (sum > 0)
+	{
+		boardList->GoTo(valid.at(0));
+		CloneFromPuzzle(boardList->ptr->nPuz);
+		GetSpace();
+		validMoves->Insert(puz);
+
+		valid.erase(valid.begin());
+		sum--;
+	}
 
 }
+
+List* Puzzle::IDFS(int Depth, Puzzle* iPuz)
+{
+	movesTaken++;
+	CloneSelf();
+	solutionPath->Insert(iPuz);
+
+	if (Solved(iPuz->board))	//this might work
+	{
+		return solutionPath;
+	}
+
+	//start over if reached max depth
+	if (Depth == 0)
+	{
+		solutionPath->DeleteLast();
+		return NULL;	//might need changes to accomodate for the list type
+	}
+
+	//otherwise, keep searching for solution
+	GenMoves();
+	StoreMoves(iPuz);
+	for (int i = 0; i < validMoves->Length(); i++)
+	{
+		validMoves->GoTo(i);
+		recursePath->Copy(IDFS(Depth - 1, validMoves->ptr->nPuz));
+		//recursePath->Copy(IDFS(Depth - 1, validMoves->ptr->nPuz));	//original
+		if (recursePath->tail != nullptr)
+		{
+			return recursePath;	//return if we found a solution on one of the alternate path
+		}
+	}
+	solutionPath->DeleteLast();
+	return NULL;
+}
+
+//original for reference
+//List* Puzzle::IDFS(int Depth, Puzzle* iPuz)
+//{
+//	movesTaken++;
+//	iPuz->CloneSelf();
+//	iPuz->solutionPath->Insert(&iPuz->Puzzle::Self());
+//
+//	if (Solved(iPuz->board))	//this might work
+//	{
+//		return iPuz->solutionPath;
+//	}
+//
+//	//start over if reached max depth
+//	if (Depth == 0)
+//	{
+//		iPuz->solutionPath->DeleteLast();
+//		return NULL;	//might need changes to accomodate for the list type
+//	}
+//
+//	//otherwise, keep searching for solution
+//	iPuz->GenMoves();
+//	iPuz->StoreMoves();
+//	for (int i = 0; i < iPuz->validMoves->Length(); i++)
+//	{
+//		iPuz->validMoves->GoTo(i);
+//		iPuz->recursePath->Copy(IDFS(Depth - 1, iPuz->validMoves->ptr->nPuz));
+//		if (iPuz->recursePath->tail != nullptr)
+//		{
+//			return iPuz->recursePath;	//return if we found a solution on one of the alternate path
+//		}
+//	}
+//	iPuz->solutionPath->DeleteLast();
+//	return NULL;
+//}
 
