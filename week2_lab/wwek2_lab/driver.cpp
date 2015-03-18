@@ -29,7 +29,7 @@ TestDriver::~TestDriver()
 void TestDriver::InitGame(int nMode)
 {
 	//seed random number generator once
-	//srand(unsigned(time(NULL)));
+	srand(unsigned(time(NULL)));
 
 	if (nMode == 0)
 	{
@@ -76,7 +76,7 @@ void TestDriver::InitGame(int nMode)
 	//AI Player
 	else if (playerType == NONPLAYER_CHARACTER)
 	{
-		GenGame(2, 2, 4);
+		GenGame(3, 3, 4);
 
 		if (PuzGame.SolveAttempt(&PuzGame))
 		{

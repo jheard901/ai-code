@@ -8,7 +8,10 @@ Puzzle::Puzzle()
 	:	movesTaken(0),
 		depth(0)
 {
-
+	//need these created for each new Puzzle for IDFS to work properly
+	boardList = new List;
+	validMoves = new List;
+	recursePath = new List;
 }
 
 Puzzle::~Puzzle()
@@ -27,16 +30,16 @@ void Puzzle::Init(int X, int Y)
 	total = (X * Y);	//total number of pieces on board. 0 = the empty space.
 
 	//init the container for board states (or technically Puzzles)
-	boardList = new List;
+	//boardList = new List;
 	
 	//init the container for storing previous board states
 	prevBoardList = new List;
 
 	//init list for use with IDFS
-	validMoves = new List;
+	//validMoves = new List;
 	theSolPath = new List;
 	solutionPath = new List;
-	recursePath = new List;
+	//recursePath = new List;
 
 	//init board
 	if (!board.empty())
@@ -333,6 +336,110 @@ void Puzzle::GenMoves()
 	else
 	{
 		bMoveRight = false;
+	}
+
+}
+
+void Puzzle::GenMoves(Puzzle* puz)
+{
+	//updating the space is done in CloneSelf() as well
+	//CloneSelf();
+
+	//make sure the board list is clear
+	puz->boardList->Reset();
+
+	for (int i = 0; i < 4; i++)	//use 4 since that is the max number of moves
+	{
+		puz->boardList->Insert(puz);
+	}
+
+	puz->GetSpace();
+	puz->currRow = 0;	//probably can remove this, dont see it in use
+	puz->currCol = 0;	//probably can remove this, dont see it in use
+	int tempNum;
+
+	//check up | using board 0
+	if (IsValid(puz->emptyRow, -1, puz->emptyCol, 0))
+	{
+		puz->bMoveUp = true;
+
+		//choose the first board from the list
+		puz->boardList->GoTo(0);
+
+		//present the new possible board state
+		tempNum = puz->boardList->ptr->nPuz->board[puz->emptyRow - 1].at(puz->emptyCol);	//get the value of the location above
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol) = tempNum;		//change the empty space (0) to be that value
+		puz->boardList->ptr->nPuz->board[puz->emptyRow - 1].at(puz->emptyCol) = 0;			//make the location above the empty space (0)
+
+		//update it's space location
+		puz->boardList->ptr->nPuz->GetSpace();
+	}
+	else
+	{
+		puz->bMoveUp = false;
+	}
+
+	//check down | using board 1
+	if (IsValid(puz->emptyRow, 1, puz->emptyCol, 0))
+	{
+		puz->bMoveDown = true;
+
+		//choose the second board from the list
+		puz->boardList->GoTo(1);
+
+		//present the new possible board state
+		tempNum = puz->boardList->ptr->nPuz->board[puz->emptyRow + 1].at(puz->emptyCol);
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol) = tempNum;
+		puz->boardList->ptr->nPuz->board[puz->emptyRow + 1].at(puz->emptyCol) = 0;
+
+		//update it's space location
+		puz->boardList->ptr->nPuz->GetSpace();
+	}
+	else
+	{
+		puz->bMoveDown = false;
+	}
+
+	//check left | using board 2
+	if (IsValid(puz->emptyRow, 0, puz->emptyCol, -1))
+	{
+		puz->bMoveLeft = true;
+
+		//choose the third board from the list
+		puz->boardList->GoTo(2);
+
+		//present the new possible board state
+		tempNum = puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol - 1);
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol) = tempNum;
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol - 1) = 0;
+
+		//update it's space location
+		puz->boardList->ptr->nPuz->GetSpace();
+	}
+	else
+	{
+		puz->bMoveLeft = false;
+	}
+
+	//check right | using board 3
+	if (IsValid(puz->emptyRow, 0, puz->emptyCol, 1))
+	{
+		puz->bMoveRight = true;
+
+		//choose the fourth board from the list
+		puz->boardList->GoTo(3);
+
+		//present the new possible board state
+		tempNum = puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol + 1);
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol) = tempNum;
+		puz->boardList->ptr->nPuz->board[puz->emptyRow].at(puz->emptyCol + 1) = 0;
+
+		//update it's space location
+		puz->boardList->ptr->nPuz->GetSpace();
+	}
+	else
+	{
+		puz->bMoveRight = false;
 	}
 
 }
@@ -651,7 +758,7 @@ void Puzzle::DisplayStats()
 
 bool Puzzle::SolveAttempt(Puzzle* aPuz)
 {
-	CloneSelf();
+	//CloneSelf();
 
 	while (!aPuz->Solved())
 	{
@@ -675,26 +782,26 @@ void Puzzle::StoreMoves(Puzzle* puz)
 	std::vector<int> valid;
 
 	//clear list if not already empty
-	if (validMoves->Length() > 0)
+	if (puz->validMoves->Length() > 0)
 	{
-		validMoves->Reset();
+		puz->validMoves->Reset();
 	}
 
 	//check the valid moves
-	if (bMoveUp) { valid.push_back(0); sum++; }
-	if (bMoveDown) { valid.push_back(1); sum++; }
-	if (bMoveLeft) { valid.push_back(2); sum++; }
-	if (bMoveRight) { valid.push_back(3); sum++; }
+	if (puz->bMoveUp) { valid.push_back(0); sum++; }
+	if (puz->bMoveDown) { valid.push_back(1); sum++; }
+	if (puz->bMoveLeft) { valid.push_back(2); sum++; }
+	if (puz->bMoveRight) { valid.push_back(3); sum++; }
 	
 	
 	//can only use sum > 1 here
 	while (sum > 1)
 	{
 		randNum = GetRandomInt(0, float(sum - 1));
-		boardList->GoTo(valid.at(randNum));
-		CloneFromPuzzle(boardList->ptr->nPuz);
-		GetSpace();
-		validMoves->Insert(puz);
+		puz->boardList->GoTo(valid.at(randNum));
+		//CloneFromPuzzle(boardList->ptr->nPuz);	//prob dont need this line or one below
+		//puz->GetSpace();
+		puz->validMoves->Insert(puz->boardList->ptr->nPuz);
 
 		valid.erase(valid.begin() + randNum);
 		sum--;
@@ -702,10 +809,10 @@ void Puzzle::StoreMoves(Puzzle* puz)
 	//then input the final move
 	if (sum > 0)
 	{
-		boardList->GoTo(valid.at(0));
-		CloneFromPuzzle(boardList->ptr->nPuz);
-		GetSpace();
-		validMoves->Insert(puz);
+		puz->boardList->GoTo(valid.at(0));
+		//CloneFromPuzzle(boardList->ptr->nPuz);
+		//GetSpace();
+		puz->validMoves->Insert(puz->boardList->ptr->nPuz);
 
 		valid.erase(valid.begin());
 		sum--;
@@ -716,8 +823,12 @@ void Puzzle::StoreMoves(Puzzle* puz)
 List* Puzzle::IDFS(int Depth, Puzzle* iPuz)
 {
 	movesTaken++;
-	CloneSelf();
+	//CloneSelf();	//don't see a point for cloneself() here anymore
 	solutionPath->Insert(iPuz);
+
+	//visual debug
+	std::cout << "\ndepth = " << Depth << "\n";
+	iPuz->Display();
 
 	if (Solved(iPuz->board))	//this might work
 	{
@@ -732,16 +843,15 @@ List* Puzzle::IDFS(int Depth, Puzzle* iPuz)
 	}
 
 	//otherwise, keep searching for solution
-	GenMoves();
+	GenMoves(iPuz);
 	StoreMoves(iPuz);
-	for (int i = 0; i < validMoves->Length(); i++)
+	for (int i = 0; i < iPuz->validMoves->Length(); i++)
 	{
-		validMoves->GoTo(i);
-		recursePath->Copy(IDFS(Depth - 1, validMoves->ptr->nPuz));
-		//recursePath->Copy(IDFS(Depth - 1, validMoves->ptr->nPuz));	//original
-		if (recursePath->tail != nullptr)
+		iPuz->validMoves->GoTo(i);
+		iPuz->recursePath->Copy(IDFS(Depth - 1, iPuz->validMoves->ptr->nPuz));
+		if (iPuz->recursePath->tail != nullptr)
 		{
-			return recursePath;	//return if we found a solution on one of the alternate path
+			return iPuz->recursePath;	//return if we found a solution on one of the alternate path
 		}
 	}
 	solutionPath->DeleteLast();

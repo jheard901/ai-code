@@ -53,6 +53,7 @@ public:
 	bool Solved();	//checks if the puzzle is solved
 	bool Solved(std::vector<std::vector<int>> Board);	//checks if a board matches the solution
 	void GenMoves();
+	void GenMoves(Puzzle* puz);
 	void DisplayGenMoves();	//only call this after running GenMoves()
 	bool IsValid(int row, int rowIncrement, int col, int colIncrement);
 	void GetSpace();
