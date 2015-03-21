@@ -145,8 +145,8 @@ void Puzzle::CloneSelf()
 
 	//gets the empty row and col
 	Puzzle::Self().GetSpace();
-	Puzzle::Self().emptyRow = emptyRow;
-	Puzzle::Self().emptyCol = emptyCol;
+	//Puzzle::Self().emptyRow = emptyRow;
+	//Puzzle::Self().emptyCol = emptyCol;
 
 	//gets solution puzzle
 	//Puzzle::Self().CloneSolution();	//this might cause errors
@@ -540,124 +540,65 @@ void Puzzle::GetUserInput()
 }
 
 //randomly selects a board state from boardlist; must run GenMoves before this
-void Puzzle::RandNewState()
+void Puzzle::RandNewState()	//later, I could update this to target a specific board, rather than the original puzzle board only
 {
-	int randNum;
 	bool bValidMove = false;
+	int randNum;
 	int sameValue;
 	int maxSameValue = total;
+	int sum = 0;
+	std::vector<int> valid;
+
+	//check the valid moves
+	if (bMoveUp) { valid.push_back(0); sum++; }
+	if (bMoveDown) { valid.push_back(1); sum++; }
+	if (bMoveLeft) { valid.push_back(2); sum++; }
+	if (bMoveRight) { valid.push_back(3); sum++; }
 
 	while (!bValidMove)
 	{
-		randNum = GetRandomInt(0, 3);	//must be from range 0 - 3 to choose a valid board state
-		sameValue = 0;					//reset sameValue
+		sameValue = 0;
 
-		if (randNum == 0)
+		//can only use sum > 1 here
+		if (sum > 1)
 		{
-			//can move up?
-			if (bMoveUp)
+			randNum = GetRandomInt(0, float(sum - 1));
+			boardList->GoTo(valid.at(randNum));
+			valid.erase(valid.begin() + randNum);
+			sum--;
+		}
+		//use the final move
+		else if (sum == 1)
+		{
+			boardList->GoTo(valid.at(0));
+			valid.erase(valid.begin());
+			sum--;
+		}
+
+		//check the previous board is not empty first
+		if(!Puzzle::Prev().board.empty())
+		{
+			//count shared values by a new random board state and prev board state
+			for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
 			{
-				//count shared values by first board and old board state
-				boardList->GoTo(0);
-				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
+				for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
 				{
-					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
+					if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Prev().board[i].at(j))
 					{
-						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
-						{
-							sameValue++;
-						}
+						sameValue++;
 					}
 				}
-
-				//is not same as last board state? //this method needs to be done better later on
-				if (sameValue != maxSameValue)
-				{
-					bValidMove = true;
-				}
 			}
-		}
-		else if (randNum == 1)
-		{
-			//can move down?
-			if (bMoveDown)
-			{
-				//count shared values by second board and old board state
-				boardList->GoTo(1);
-				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
-				{
-					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
-					{
-						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
-						{
-							sameValue++;
-						}
-					}
-				}
-
-				//is not same as last board state? //this method needs to be done better later on
-				if (sameValue != maxSameValue)
-				{
-					bValidMove = true;
-				}
 			}
-		}
-		else if (randNum == 2)
-		{
-			//can move left?
-			if (bMoveLeft)
-			{
-				//count shared values by third board and old board state
-				boardList->GoTo(2);
-				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
-				{
-					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
-					{
-						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
-						{
-							sameValue++;
-						}
-					}
-				}
 
-				//is not same as last board state? //this method needs to be done better later on
-				if (sameValue != maxSameValue)
-				{
-					bValidMove = true;
-				}
-			}
-		}
-		else if (randNum == 3)
+		//is not same as last board state?
+		if (sameValue != maxSameValue)
 		{
-			//can move right?
-			if (bMoveRight)
-			{
-				//count shared values by fourth board and old board state
-				boardList->GoTo(3);
-				for (unsigned int i = 0; i < boardList->ptr->nPuz->board.size(); i++)	//rows
-				{
-					for (unsigned int j = 0; j < boardList->ptr->nPuz->board[i].size(); j++)	//cols
-					{
-						//if (*boardList->ptr->nPuz->board[i].begin() + j == *Puzzle::Self().board[i].begin() + j)
-						if (boardList->ptr->nPuz->board[i].at(j) == Puzzle::Self().board[i].at(j))
-						{
-							sameValue++;
-						}
-					}
-				}
-
-				//is not same as last board state? //this method needs to be done better later on
-				if (sameValue != maxSameValue)
-				{
-					bValidMove = true;
-				}
-			}
-		}
-		else
-		{
-			//this else statement should never happen though
+			bValidMove = true;
 		}
 	}
+	//store the prev board (i.e. current board since its about to be changed) to compare it to the next board state
+	Puzzle::Prev().CloneFromPuzzle(&Puzzle::Self());
 
 	//set our current board to the new board's state
 	//also, these functions are essentially all you need whenever you want to update the current board to a new board state
@@ -961,3 +902,85 @@ int Puzzle::HCost(std::vector<std::vector<int>> Board)
 	return pathCost;
 }
 
+int Puzzle::HCostSimple(std::vector<std::vector<int>> Board)
+{
+	int pathCost = 0;
+	currRow = 0;
+	currCol = 0;
+
+	//rows
+	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
+	{
+		//cols
+		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
+		{
+			if (Board[i].at(j) != Puzzle::Inst().board[i].at(j))
+			{
+				pathCost++;
+			}
+			currCol++;
+		}
+		currRow++;
+		currCol = 0;
+	}
+
+	return pathCost;
+}
+
+bool Puzzle::SolveAttemptHS(Puzzle* aPuz)
+{
+	//set initial cost limit
+	depth = 0;
+	costLimit = HCostSimple(aPuz->board);
+	costIncrement = aPuz->rows * aPuz->columns;	//experiment with different values here
+
+	//the game loop
+	while (!aPuz->Solved())
+	{
+		solutionPath->Reset();
+		std::cout << "\nCost Limit: " << costLimit << std::endl;	//visual debug
+
+		theSolPath->Copy(DFAS(costLimit, depth, aPuz));
+		if (theSolPath->tail != nullptr)
+		{
+			CloneFromBoard(theSolPath->tail->nPuz->board);
+		}
+		costLimit += costIncrement;
+	}
+	return true;
+}
+
+List* Puzzle::DFAS(int CostLimit, int Depth, Puzzle* iPuz)
+{
+	movesTaken++;
+	solutionPath->Insert(iPuz);
+
+	//visual debug help
+	std::cout << "\ndepth = " << Depth << "\n";
+	iPuz->Display();
+
+	if (Solved(iPuz->board))
+	{
+		return solutionPath;
+	}
+
+	//keep searching for solution
+	GenMoves(iPuz);
+	StoreMoves(iPuz);
+	for (int i = 0; i < iPuz->validMoves->Length(); i++)
+	{
+		iPuz->validMoves->GoTo(i);	//possibly could improve this by going through each move, get their heuristic cost, compare to find the lowest, then start with that board
+
+		//only explore boards with good heuristic values
+		if (HCostSimple(iPuz->validMoves->ptr->nPuz->board) + Depth <= CostLimit)
+		{
+			iPuz->recursePath->Copy(DFAS(CostLimit, Depth + 1, iPuz->validMoves->ptr->nPuz));
+			if (iPuz->recursePath->tail != nullptr)
+			{
+				return iPuz->recursePath;	//return if we found a solution on one of the alternate path
+			}
+		}
+	}
+	solutionPath->DeleteLast();
+	return NULL;
+}

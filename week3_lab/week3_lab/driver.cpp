@@ -17,7 +17,7 @@ TestDriver::TestDriver()
 	//default ai settings
 	aiRowSize = 3;
 	aiColSize = 3;
-	aiShufTimes = 20;
+	aiShufTimes = 500;
 }
 
 TestDriver::~TestDriver()
@@ -29,7 +29,7 @@ TestDriver::~TestDriver()
 void TestDriver::InitGame(int nMode)
 {
 	//seed random number generator once
-	//srand(unsigned(time(NULL)));
+	srand(unsigned(time(NULL)));
 
 	if (nMode == 0)
 	{
@@ -44,6 +44,10 @@ void TestDriver::InitGame(int nMode)
 		playerType = NONPLAYER_CHARACTER2;
 	}
 	else if (nMode == 3)
+	{
+		playerType = NONPLAYER_CHARACTER3;
+	}
+	else if (nMode == 4)
 	{
 		playerType = DEV_CHARACTER;
 	}
@@ -108,10 +112,27 @@ void TestDriver::InitGame(int nMode)
 		}
 	}
 
+	//AI Player with simple heuristics
+	else if (playerType == NONPLAYER_CHARACTER3)
+	{
+		GenGame(aiRowSize, aiColSize, aiShufTimes);
+
+		if (PuzGame.SolveAttemptH(&PuzGame))
+		{
+			std::cout << "\n\nYou win!";
+			NEW_LINE(LEN);
+			PuzGame.DisplayStats();
+			NEW_LINE(LEN);
+			std::cout << "Your Board:\n";
+			PuzGame.Display();
+			return;
+		}
+	}
+
 	//For Debugging
 	else if (playerType == DEV_CHARACTER)
 	{
-		GenGame(3, 3, 2);	//input values directly
+		GenGame(3, 3, 18);	//input values directly
 
 		//The Game Loop
 		while (!PuzGame.Solved())
@@ -166,6 +187,14 @@ void TestDriver::SetBoardState()
 		std::cin >> aiShufTimes;
 		break;
 	case NONPLAYER_CHARACTER2:
+		std::cout << "row size: ";
+		std::cin >> aiRowSize;
+		std::cout << "col size: ";
+		std::cin >> aiColSize;
+		std::cout << "shuffle times: ";
+		std::cin >> aiShufTimes;
+		break;
+	case NONPLAYER_CHARACTER3:
 		std::cout << "row size: ";
 		std::cin >> aiRowSize;
 		std::cout << "col size: ";

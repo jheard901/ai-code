@@ -11,7 +11,8 @@
 const int PLAYER = 0;
 const int AI = 1;	//ai values are set up from within TestDriver constructor
 const int AI2 = 2;
-const int DEV = 3;
+const int AI3 = 3;
+const int DEV = 4;
 
 int main()
 {
@@ -20,17 +21,17 @@ int main()
 	///////////////////////////////////////////
 	//Start test driver here
 	///////////////////////////////////////////
-	//std::cout << "Select user mode: \n";
-	//std::cout << "0 = PLAYER\n";
-	//std::cout << "1 = AI\n";
-	//std::cout << "2 = AI2\n";
-	//std::cout << "3 = DEV\n";
-	//int input;
+	std::cout << "Select user mode: \n";
+	std::cout << "0 = PLAYER\n";
+	std::cout << "1 = AI\n";
+	std::cout << "2 = AI + Heuristic\n";
+	std::cout << "3 = AI + Simple Heuristic\n";
+	std::cout << "4 = DEV\n";
+	int input = 2;
 	//std::cin >> input;
+	testGame.InitGame(input);	//accepts values 0 - 4
 
-	testGame.InitGame(AI2);	//accepts values 0 - 3
 	std::cout << "\n\n";
 	system("pause");
 	return 0;
 }
-

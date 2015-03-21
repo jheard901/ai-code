@@ -40,7 +40,7 @@ public:
 	Puzzle();
 	static Puzzle &Inst() { static Puzzle puzSolved; return puzSolved; }
 	static Puzzle &Self() { static Puzzle puzSelf; return puzSelf; }
-	//static Puzzle &Prev() { static Puzzle puzPrev; return puzPrev; }
+	static Puzzle &Prev() { static Puzzle puzPrev; return puzPrev; }
 	//static List* &Inst2() { static List* puzList; return puzList; }
 	~Puzzle();
 	void Init(int X, int Y); //create NxN puzzle board
@@ -70,7 +70,12 @@ public:
 	List* IDFS(int Depth, Puzzle* iPuz);
 	List* DFA(int CostLimit, int Depth, Puzzle* iPuz);	//uses a cost function to limit it
 	int DistFromGoal(int value, int cr, int cc);	//returns how far away a value is from its solution state; cr = currRow, cc = currCol
-	int HCost(std::vector<std::vector<int>> Board);	//returns cost of board relative to the solution state
+	int HCost(std::vector<std::vector<int>> Board);	//returns cost of board relative to the solution state (via Manhattan)
+	
+	//uses the simple heuristic
+	bool SolveAttemptHS(Puzzle* aPuz);
+	int HCostSimple(std::vector<std::vector<int>> Board);
+	List* DFAS(int CostLimit, int Depth, Puzzle* iPuz);
 
 	//inline defs
 	std::vector<std::vector<int>> GetBoard() { return board; }
