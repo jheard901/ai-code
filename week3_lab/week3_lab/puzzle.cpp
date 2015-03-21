@@ -3,6 +3,7 @@
 #include "list.h"
 #include "math.h"
 #include <iostream>
+#include <cmath>	//abs()
 
 Puzzle::Puzzle()
 	:	movesTaken(0),
@@ -759,6 +760,30 @@ bool Puzzle::SolveAttempt(Puzzle* aPuz)
 	return true;
 }
 
+//attempt to solve using a heuristic
+bool Puzzle::SolveAttemptH(Puzzle* aPuz)
+{
+	//set initial cost limit
+	depth = 0;
+	costLimit = HCost(aPuz->board);
+	costIncrement = aPuz->rows * aPuz->columns;	//experiment with different values here
+
+	//the game loop
+	while (!aPuz->Solved())
+	{
+		solutionPath->Reset();
+		std::cout << "\nCost Limit: " << costLimit << std::endl;	//visual debug
+
+		theSolPath->Copy(DFA(costLimit, depth, aPuz));
+		if (theSolPath->tail != nullptr)
+		{
+			CloneFromBoard(theSolPath->tail->nPuz->board);
+		}
+		costLimit += costIncrement;
+	}
+	return true;
+}
+
 //must be run after gen moves
 void Puzzle::StoreMoves(Puzzle* puz)
 {
@@ -836,5 +861,103 @@ List* Puzzle::IDFS(int Depth, Puzzle* iPuz)
 	}
 	solutionPath->DeleteLast();
 	return NULL;
+}
+
+List* Puzzle::DFA(int CostLimit, int Depth, Puzzle* iPuz)
+{
+	movesTaken++;
+	solutionPath->Insert(iPuz);
+
+	//visual debug help
+	std::cout << "\ndepth = " << Depth << "\n";
+	iPuz->Display();
+
+	if (Solved(iPuz->board))
+	{
+		return solutionPath;
+	}
+
+	//keep searching for solution
+	GenMoves(iPuz);
+	StoreMoves(iPuz);
+	for (int i = 0; i < iPuz->validMoves->Length(); i++)
+	{
+		iPuz->validMoves->GoTo(i);	//possibly could improve this by going through each move, get their heuristic cost, compare to find the lowest, then start with that board
+
+		//only explore boards with good heuristic values
+		if (HCost(iPuz->validMoves->ptr->nPuz->board) + Depth <= CostLimit)
+		{
+			iPuz->recursePath->Copy(DFA(CostLimit, Depth + 1, iPuz->validMoves->ptr->nPuz));
+			if (iPuz->recursePath->tail != nullptr)
+			{
+				return iPuz->recursePath;	//return if we found a solution on one of the alternate path
+			}
+		}
+	}
+	solutionPath->DeleteLast();
+	return NULL;
+}
+
+//returns distance a value is from its solution state
+int Puzzle::DistFromGoal(int value, int cr, int cc)
+{
+	bool bFoundGoal = false;
+	int goalRow = 0;
+	int goalCol = 0;
+
+	//find what row and col the value should be in
+	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)	//rows
+	{
+		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)	//cols
+		{
+			if (value == Puzzle::Inst().board[i].at(j))
+			{
+				bFoundGoal = true;
+				break;
+			}
+			goalCol++;
+		}
+		if (bFoundGoal)
+		{
+			break;
+		}
+		goalRow++;
+		goalCol = 0;
+	}
+
+	int dr = goalRow - cr;	//dist from currrow to goalrow
+	int dc = goalCol - cc;	//dist from currcol to goalcow
+	int dt = std::abs(dr) + std::abs(dc);	//total dist
+
+	return dt;
+}
+
+//returns cost of board relative to the solution state
+int Puzzle::HCost(std::vector<std::vector<int>> Board)
+{
+	int tempNum;
+	int pathCost = 0;
+	currRow = 0;
+	currCol = 0;
+
+	//rows
+	for (unsigned int i = 0; i < Puzzle::Inst().board.size(); i++)
+	{
+		//cols
+		for (unsigned int j = 0; j < Puzzle::Inst().board[i].size(); j++)
+		{
+			tempNum = Board[i].at(j);
+
+			if (tempNum != Puzzle::Inst().board[i].at(j))
+			{
+				pathCost += DistFromGoal(tempNum, currRow, currCol);
+			}
+			currCol++;
+		}
+		currRow++;
+		currCol = 0;
+	}
+
+	return pathCost;
 }
 

@@ -10,9 +10,9 @@ const int LEN = 2;
 TestDriver::TestDriver()
 {
 	//default player settings
-	rowSize = 0;
-	colSize = 0;
-	shufTimes = 0;
+	rowSize = 2;
+	colSize = 2;
+	shufTimes = 6;
 
 	//default ai settings
 	aiRowSize = 3;
@@ -41,6 +41,10 @@ void TestDriver::InitGame(int nMode)
 	}
 	else if (nMode == 2)
 	{
+		playerType = NONPLAYER_CHARACTER2;
+	}
+	else if (nMode == 3)
+	{
 		playerType = DEV_CHARACTER;
 	}
 	else { return; }
@@ -49,15 +53,12 @@ void TestDriver::InitGame(int nMode)
 	//START GAME HERE
 	///////////////////////////////////////////	P.S - should be using a switch/case probs
 	
+	//lets user set initial board size and shuffle times
+	//SetBoardState();
+
 	//Human Player
 	if (playerType == PLAYER_CHARACTER)
 	{
-		std::cout << "row size: ";
-		std::cin >> rowSize;
-		std::cout << "col size: ";
-		std::cin >> colSize;
-		std::cout << "shuffle times: ";
-		std::cin >> shufTimes;
 		GenGame(rowSize, colSize, shufTimes);
 		NEW_LINE(LEN);
 
@@ -73,12 +74,29 @@ void TestDriver::InitGame(int nMode)
 		return;
 	}
 
-	//AI Player
+	//AI Player (incredibly slow compared to AI with heuristics)
 	else if (playerType == NONPLAYER_CHARACTER)
 	{
-		GenGame(2, 2, 6);
+		GenGame(aiRowSize, aiColSize, aiShufTimes);
 
 		if (PuzGame.SolveAttempt(&PuzGame))
+		{
+			std::cout << "\n\nYou win!";
+			NEW_LINE(LEN);
+			PuzGame.DisplayStats();
+			NEW_LINE(LEN);
+			std::cout << "Your Board:\n";
+			PuzGame.Display();
+			return;
+		}
+	}
+
+	//AI Player with heuristics
+	else if (playerType == NONPLAYER_CHARACTER2)
+	{
+		GenGame(aiRowSize, aiColSize, aiShufTimes);
+
+		if (PuzGame.SolveAttemptH(&PuzGame))
 		{
 			std::cout << "\n\nYou win!";
 			NEW_LINE(LEN);
@@ -127,3 +145,35 @@ void TestDriver::GenGame(int nRows, int nCols, int nShuffles)
 	//prevBoardList->Display();
 }
 
+void TestDriver::SetBoardState()
+{
+	switch (playerType)
+	{
+	case PLAYER_CHARACTER:
+		std::cout << "row size: ";
+		std::cin >> rowSize;
+		std::cout << "col size: ";
+		std::cin >> colSize;
+		std::cout << "shuffle times: ";
+		std::cin >> shufTimes;
+		break;
+	case NONPLAYER_CHARACTER:
+		std::cout << "row size: ";
+		std::cin >> aiRowSize;
+		std::cout << "col size: ";
+		std::cin >> aiColSize;
+		std::cout << "shuffle times: ";
+		std::cin >> aiShufTimes;
+		break;
+	case NONPLAYER_CHARACTER2:
+		std::cout << "row size: ";
+		std::cin >> aiRowSize;
+		std::cout << "col size: ";
+		std::cin >> aiColSize;
+		std::cout << "shuffle times: ";
+		std::cin >> aiShufTimes;
+		break;
+	case DEV_CHARACTER:
+		break;
+	}
+}

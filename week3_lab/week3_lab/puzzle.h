@@ -17,6 +17,7 @@ private:
 	int total;	//total num pieces in play
 	int movesTaken;
 	int depth;
+	int costLimit, costIncrement;
 
 	//four temp boards for generating moves
 	List* boardList;
@@ -64,8 +65,12 @@ public:
 	void DisplayStats();	//only use after game is completed
 
 	bool SolveAttempt(Puzzle* aPuz);	//used only by driver
+	bool SolveAttemptH(Puzzle* aPuz);	//uses a heuristic
 	void StoreMoves(Puzzle* puz);
 	List* IDFS(int Depth, Puzzle* iPuz);
+	List* DFA(int CostLimit, int Depth, Puzzle* iPuz);	//uses a cost function to limit it
+	int DistFromGoal(int value, int cr, int cc);	//returns how far away a value is from its solution state; cr = currRow, cc = currCol
+	int HCost(std::vector<std::vector<int>> Board);	//returns cost of board relative to the solution state
 
 	//inline defs
 	std::vector<std::vector<int>> GetBoard() { return board; }
